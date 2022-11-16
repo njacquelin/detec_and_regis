@@ -100,22 +100,6 @@ if __name__=='__main__':
     model.eval()
     ######################
 
-    ### REGIS PREPROC ###
-    threshold = 0.75
-    field_length = 115
-    markers_x = np.linspace(0, field_length, 11)
-    field_width = 74
-    lines_y = np.linspace(0, field_width, 11)
-    regis_path = '100epochs_DECENT_all_train.pth'
-    regis_model = vanilla_Unet(final_depth=len(markers_x) + len(lines_y))
-    regis_models_path = './models/'
-
-    regis_models_path = os.path.join(regis_models_path, regis_path)
-    regis_model.load_state_dict(load(regis_models_path))
-    regis_model = regis_model.cuda()
-    regis_model.eval()
-    #####################
-
     counter = 0
     with no_grad() :
         for batch in dataloader :
@@ -139,22 +123,6 @@ if __name__=='__main__':
             img_overlay = cv2.cvtColor(img_overlay, cv2.COLOR_RGB2BGR)
             ###################
 
-            ### REGISTRATION ###
-            batch_out = regis_model(batch_tensors)
-            batch_out = tensor_to_image2(batch_out, inv_trans=False, batched=True, to_uint8=False)
-            batch_out = batch_out[0]
-            imgs = cv2.cvtColor(imgs, cv2.COLOR_BGR2RGB)
-            imgs, src_pts, dst_pts, entropies = get_faster_landmarks_positions(imgs, batch_out, threshold,
-                                                                              write_on_image=True,
-                                                                              lines_nb=len(lines_y),
-                                                                              markers_x=markers_x,
-                                                                              lines_y=lines_y)
-            src_pts, dst_pts = conflicts_managements(src_pts, dst_pts, entropies)
-            H = get_homography_from_points(src_pts, dst_pts, size,
-                                               field_length=field_length, field_width=field_width)
-            #####################
-
-            img_overlay = cv2.warpPerspective(img_overlay, H, size)
             img_overlay = cv2.resize(img_overlay, (512, 256))
             out_img_path = out_img_dir + name + ".jpg"
             cv2.imwrite(out_img_path, img_overlay)
