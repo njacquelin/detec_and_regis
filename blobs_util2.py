@@ -135,7 +135,7 @@ def get_boxes(heatmap_source, threshold=0.8, min_blob_size=None, max_blob_size=N
     return bboxes
 
 
-def get_boxes_faster(heatmap_source, threshold, min_blob_size=None) :
+def get_boxes_faster(heatmap_source, threshold) :
     heatmap = np.copy(heatmap_source)
     if len(heatmap.shape) != 2:  # RGB-friendly heatmaps
         if np.argmin(heatmap.shape) == 2:
@@ -250,18 +250,19 @@ def get_IOU(box, prev_box) :
 
 
 def a_link_to_the_past(box, prev_boxes, IOU_threshold=0.3) :
-    best_IOU = -1.
-    best_box_index = -1.
     if prev_boxes == [] :
         prev_boxes.append((box, 0))
-    else :
-        for i, (prev_box, timer) in enumerate(prev_boxes) :
-            IOU = get_IOU(box, prev_box)
-            if IOU > best_IOU and IOU > IOU_threshold :
-                best_IOU = IOU
-                best_box_index = i
-        if best_box_index != -1 : prev_boxes[best_box_index] = (box, 0)
-        else : prev_boxes.append((box, 0))
+        return -1, prev_boxes
+
+    best_IOU = -1.
+    best_box_index = -1.
+    for i, (prev_box, timer) in enumerate(prev_boxes) :
+        IOU = get_IOU(box, prev_box)
+        if IOU > best_IOU and IOU > IOU_threshold :
+            best_IOU = IOU
+            best_box_index = i
+    if best_box_index != -1 : prev_boxes[best_box_index] = (box, 0)
+    else : prev_boxes.append((box, 0))
     return best_box_index, prev_boxes
 
 

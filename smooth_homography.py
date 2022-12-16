@@ -45,19 +45,22 @@ if __name__=='__main__':
     registration_threshold = 0.75
     registration_model, field_width, field_length, markers_x, lines_y = get_registration_model(path='100epochs_DECENT_all_train.pth')
 
-    batch_size = 64
+    batch_size = 4
     k_size = 51
 
     # if False, warp template
     warp_image = True
+    smooth_homography = True
 
-    # full_images_path = '/home/nicolas/datasets/Neptune Dataset/frames/test'
-    full_images_path = '/home/nicolas/swimmers_tracking/extractions/TITENIS_frames'
+    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/TITENIS_frames'
     # full_images_path = '/home/nicolas/swimmers_tracking/extractions/0 these case study'
+    full_images_path = "../datasets/race_example/2021_Nice_freestyle_50_serie4_hommes_fixeGauche.mp4"
 
-    video_name = get_video_name(0, full_images_path, size, "", True, registration_threshold)
+    text_addition = "_smoothed_homography" if smooth_homography else "_homography"
+    text_addition += "_warped" if warp_image else ""
+    video_name = get_video_name(0, full_images_path, size, text_addition, True, registration_threshold)
     video_path = './videos/' + video_name
-    video_flow = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), 25, (size[1], size[0]))
+    video_flow = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), 25, size[::-1])
 
     dataloader = get_video_dataloaders(full_images_path, size, batch_size=batch_size)
 
@@ -97,9 +100,12 @@ if __name__=='__main__':
                 i += 1
     print("Matrices computed.")
 
-    print("Smoothing...")
-    homographies, mid_kernel = smooth_homographies(homographies, k_size=k_size)
-    print("Smoothing finished.")
+    if smooth_homography:
+        print("Smoothing...")
+        homographies, mid_kernel = smooth_homographies(homographies, k_size=k_size)
+        print("Smoothing finished.")
+    else:
+        mid_kernel = (k_size-1) // 2
 
     print("Registration started...")
     for root, dirs, files in os.walk(full_images_path):
@@ -113,15 +119,15 @@ if __name__=='__main__':
             if warp_image:
                 if H is not None:
                     img = cv2.warpPerspective(img, H, size)
-                img = cv2.addWeighted(img, 0.5, template, 0.6, 0)
+                img = cv2.addWeighted(img, 0.5, template, 0.5, 0)
             else:
                 if H is not None and np.linalg.det(H) != 0:
                     template2 = cv2.warpPerspective(template, np.linalg.inv(H), size)
                 else: template2 = template[:]
-                img = cv2.addWeighted(img, 0.5, template2, 0.6, 0)
+                img = cv2.addWeighted(img, 0.5, template2, 0.5, 0)
 
 
 
             video_flow.write(img)
-    print("Registration Finished. Video Ready.")
+    print("Registration Finished. Video Ready. Smoothed with a window of size " + str(k_size) + ".")
     video_flow.release()

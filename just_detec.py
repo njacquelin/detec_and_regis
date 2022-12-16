@@ -79,25 +79,21 @@ if __name__=='__main__':
     # size = (512, 512)
     # size = (1024, 1024)
 
-    display_bboxes = True
-    display_heatmap = False
-
+    display_bboxes = False
+    display_heatmap = True
+    apply_thresholds = False
     detection_heatmap_threshold = 0.45
-    apply_thresholds = True
+
     model = get_detection_model(detection_path='colorShifts_deeper_zoomedOut_200epochs.pth')
 
-    # full_images_path = './une_image_DONE'
-    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/Gwangju_frames'
-    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/Angers19_frames'
-    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/Rennes19_frames'
-    full_images_path = '/home/nicolas/swimmers_tracking/extractions/TITENIS_frames'
-    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/50_dos_dames_finaleA_f122020'
-    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/50_brasse_dames_finaleA_f122020_droite'
-    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/50_brasse_dames_finaleA_f122020_gauche'
-    # full_images_path = '/home/amigo/Documents/Neptune/FFN_tool/2021_Nice_brasse_50_finaleA_dames/images/left'
-    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/labelled_images/test'
+    full_images_path = '/home/nicolas/swimmers_tracking/extractions/0 these case study'
 
-    video_name = get_video_name(0, full_images_path, size)
+    text_addition = ""
+    text_addition += "_bboxes" if display_bboxes else ""
+    text_addition += "_blobs" if display_heatmap and apply_thresholds \
+                    else "_blobs_noThreshold" if not apply_thresholds \
+                    else ""
+    video_name = get_video_name(0, full_images_path, size, text_addition)
     video_path = './videos/' + video_name
     video_flow = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), 25, (size[1], size[0]))
 
@@ -132,7 +128,7 @@ if __name__=='__main__':
                     boxes = get_boxes_faster(out[:], threshold=detection_heatmap_threshold)
                     img_overlay = img
                     for (xmin, ymin, xmax, ymax) in boxes:
-                        img = cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (255, 255, 255), 5)
+                        img = cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (255, 255, 255), 2)
                         img_overlay = img
 
                 if display_heatmap : # display heatmap
@@ -143,7 +139,6 @@ if __name__=='__main__':
 
                 img_overlay = cv2.cvtColor(img_overlay, cv2.COLOR_RGB2BGR)
                 video_flow.write(img_overlay)
-                # video_flow.write(out)
 
                 if i==31 :
                     print(i*j)

@@ -87,8 +87,9 @@ if __name__=='__main__':
 
     batch_size = 64
 
-    # full_images_path = '/home/nicolas/datasets/Neptune Dataset/frames/test'
-    full_images_path = '/home/nicolas/swimmers_tracking/extractions/TITENIS_frames'
+    full_images_path = '/home/nicolas/swimmers_tracking/extractions/0 these case study'
+    # full_images_path = '/home/nicolas/swimmers_tracking/extractions/TITENIS_frames'
+
 
     video_name = get_video_name(0, full_images_path, size, "", True, registration_threshold)
     video_path = './videos/' + video_name
